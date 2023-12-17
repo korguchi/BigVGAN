@@ -1,3 +1,26 @@
+This is a fork of BigVGAN vocoder.
+
+# What is modified?
+## Automatic sample rate conversion
+The assertion error is annoying, so I added automatic sample rate conversion in `meldataset.py`
+
+## Add code for mel spectrogram calculation
+See `save_melspec.py`
+
+## Simplify load function of filelist
+If you'd like to train from mel spectrogram and wav files, you can run this command.
+``` shell
+python train.py \
+--config configs/bigvgan_24khz_100band.json \
+--fine_tuning 1 \
+--input_wavs_dir JSUT/wav \
+--input_mels_dir JSUT/mel \
+--input_training_file JSUT/train.txt \
+--input_validation_file JSUT/test.txt \
+--input_test_file JSUT/test.txt \
+--checkpoint_path exp/bigvgan
+```
+
 ## BigVGAN: A Universal Neural Vocoder with Large-Scale Training
 #### Sang-gil Lee, Wei Ping, Boris Ginsburg, Bryan Catanzaro, Sungroh Yoon
 
