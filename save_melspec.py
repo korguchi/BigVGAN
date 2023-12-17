@@ -49,4 +49,5 @@ def main():
 
     save_melspec(h, a.input_wav_dir, a.output_mel_dir)
 
-    
+if __name__ == '__main__':
+    main()
