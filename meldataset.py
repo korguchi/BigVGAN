@@ -105,6 +105,22 @@ def get_dataset_filelist(a):
     return training_files, validation_files, list_unseen_validation_files
 
 
+def get_dataset_simplefilelist(a):
+    with open(a.input_training_file, 'r', encoding='utf-8') as fi:
+        training_files = [x+'.wav' for x in fi.read().split('\n') if len(x) > 0]
+        print("first training file: {}".format(training_files[0]))
+
+    with open(a.input_validation_file, 'r', encoding='utf-8') as fi:
+        validation_files = [x+'.wav' for x in fi.read().split('\n') if len(x) > 0]
+        print("first validation file: {}".format(validation_files[0]))
+
+    with open(a.input_test_file, 'r', encoding='utf-8') as fi:
+        test_files = [x+'.wav' for x in fi.read().split('\n') if len(x) > 0]
+        print("first test file: {}".format(test_files[0]))
+
+    return training_files, validation_files, test_files
+
+
 class MelDataset(torch.utils.data.Dataset):
     def __init__(self, training_files, hparams, segment_size, n_fft, num_mels,
                  hop_size, win_size, sampling_rate,  fmin, fmax, split=True, shuffle=True, n_cache_reuse=1,
