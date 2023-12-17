@@ -163,6 +163,7 @@ class MelDataset(torch.utils.data.Dataset):
                 mel = mel_spectrogram(audio, self.n_fft, self.num_mels,
                                       self.sampling_rate, self.hop_size, self.win_size, self.fmin, self.fmax,
                                       center=False)
+                
             else: # validation step
                 # match audio length to self.hop_size * n for evaluation
                 if (audio.size(1) % self.hop_size) != 0:
