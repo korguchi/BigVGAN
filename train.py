@@ -20,7 +20,7 @@ import torch.multiprocessing as mp
 from torch.distributed import init_process_group
 from torch.nn.parallel import DistributedDataParallel
 from env import AttrDict, build_env
-from meldataset import MelDataset, mel_spectrogram, get_dataset_filelist, MAX_WAV_VALUE
+from meldataset import MelDataset, mel_spectrogram, get_dataset_filelist
 from models import BigVGAN, MultiPeriodDiscriminator, MultiResolutionDiscriminator,\
     feature_loss, generator_loss, discriminator_loss
 from utils import plot_spectrogram, plot_spectrogram_clipped, scan_checkpoint, load_checkpoint, save_checkpoint, save_audio
@@ -181,8 +181,8 @@ def train(rank, a, h):
                     # resample to 16000 for pesq
                     y_16k = pesq_resampler(y)
                     y_g_hat_16k = pesq_resampler(y_g_hat.squeeze(1))
-                    y_int_16k = (y_16k[0] * MAX_WAV_VALUE).short().cpu().numpy()
-                    y_g_hat_int_16k = (y_g_hat_16k[0] * MAX_WAV_VALUE).short().cpu().numpy()
+                    y_int_16k = (y_16k[0]).short().cpu().numpy()
+                    y_g_hat_int_16k = (y_g_hat_16k[0]).short().cpu().numpy()
                     val_pesq_tot += pesq(16000, y_int_16k, y_g_hat_int_16k, 'wb')
 
                 # MRSTFT calculation
@@ -377,8 +377,8 @@ def main():
 
     parser.add_argument('--group_name', default=None)
 
-    parser.add_argument('--input_wav_dir', default='JSUT/wav')
-    parser.add_argument('--input_mel_dir', default='JSUT/mel')
+    parser.add_argument('--input_wavs_dir', default='JSUT/wav')
+    parser.add_argument('--input_mels_dir', default='JSUT/mel')
     parser.add_argument('--input_training_file', default='JSUT/train.txt')
     parser.add_argument('--input_validation_file', default='JSUT/val.txt')
     parser.add_argument('--input_test_file', default='JSUT/test.txt')

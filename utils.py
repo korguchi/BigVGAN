@@ -8,8 +8,8 @@ import torch
 from torch.nn.utils import weight_norm
 matplotlib.use("Agg")
 import matplotlib.pylab as plt
-from meldataset import MAX_WAV_VALUE
-from scipy.io.wavfile import write
+import soundfile as sf
+import numpy as np
 
 
 def plot_spectrogram(spectrogram):
@@ -75,6 +75,5 @@ def scan_checkpoint(cp_dir, prefix):
 
 def save_audio(audio, path, sr):
     # wav: torch with 1d shape
-    audio = audio * MAX_WAV_VALUE
-    audio = audio.cpu().numpy().astype('int16')
-    write(path, sr, audio)
+    audio = audio.cpu().numpy() * 32767
+    sf.write(path, audio.astype(np.int16), sr)

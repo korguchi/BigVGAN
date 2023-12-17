@@ -13,59 +13,20 @@ from tqdm import tqdm
 import argparse
 from env import AttrDict, build_env
 import json
-from meldataset import MelDataset, load_wav
+from meldataset import MelDataset, load_wav, mel_spectrogram
 from glob import glob
 import numpy as np
-from scipy.signal import stft, hanning
+from scipy.signal import stft, hann
 
-
-def dynamic_range_compression(x, C=1, clip_val=1e-5):
-    return np.log(np.clip(x, a_min=clip_val, a_max=None) * C)
-
-
-def dynamic_range_decompression(x, C=1):
-    return np.exp(x) / C
-
-
-def spectral_normalize(magnitudes):
-    output = dynamic_range_compression(magnitudes)
-    return output
-
-
-def mel_spectrogram(y, n_fft, num_mels, sampling_rate, hop_size, win_size, fmin, fmax, center=False):
-    if np.min(y) < -1.:
-        print('min value is ', np.min(y))
-    if np.max(y) > 1.:
-        print('max value is ', np.max(y))
-
-    global mel_basis, hann_window
-    if fmax not in mel_basis:
-        mel = librosa_mel_fn(sampling_rate, n_fft, num_mels, fmin, fmax)
-        mel_basis[str(fmax)] = mel
-        hann_window = hanning(win_size)
-
-    pad_width = int((n_fft - hop_size) / 2)
-    y = np.pad(y, pad_width, mode='reflect')
-
-    _, _, spec = stft(y, fs=sampling_rate, window=hann_window, nperseg=win_size, noverlap=n_fft-hop_size)
-
-    # Compute magnitude
-    spec = np.abs(spec)
-
-    # Apply mel scale
-    spec = np.dot(mel_basis[str(fmax)], spec)
-
-    # Normalize
-    spec = spectral_normalize(spec)
-
-    return spec
 
 def save_melspec(h, input_wav_dir, output_mel_dir):
+    os.makedirs(output_mel_dir, exist_ok=True)
     wav_paths = glob(os.path.join(input_wav_dir, '*.wav'))
     for w in tqdm(wav_paths):
-        print('Processing: ', w)
-        wav = load_wav(w, h.sampling_rate)
-        mel = mel_spectrogram(wav,
+        audio = load_wav(w, h.sampling_rate)
+        audio = torch.FloatTensor(audio)
+        audio = audio.unsqueeze(0)
+        mel = mel_spectrogram(audio,
                               h.n_fft,
                               h.num_mels,
                               h.sampling_rate,
@@ -73,7 +34,8 @@ def save_melspec(h, input_wav_dir, output_mel_dir):
                               h.win_size,
                               h.fmin,
                               h.fmax)
-        mel.save(os.path.join(output_mel_dir, w + '.npy'), mel, allow_pickle=False)
+        mel = mel.to('cpu').detach().numpy().copy()
+        np.save(os.path.join(output_mel_dir, os.path.basename(w).replace('.wav', '.npy')), mel, allow_pickle=False)
 
 
 def main():
