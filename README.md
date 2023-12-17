@@ -21,6 +21,14 @@ python train.py \
 --checkpoint_path exp/bigvgan
 ```
 
+`train.txt`
+```
+BASIC5000_0001
+BASIC5000_0002
+BASIC5000_0003
+...
+```
+
 ## BigVGAN: A Universal Neural Vocoder with Large-Scale Training
 #### Sang-gil Lee, Wei Ping, Boris Ginsburg, Bryan Catanzaro, Sungroh Yoon
 
