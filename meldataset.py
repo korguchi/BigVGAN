@@ -1,3 +1,5 @@
+# Modified by: Junya Koguchi, 2023-12-18
+
 # Copyright (c) 2022 NVIDIA CORPORATION. 
 #   Licensed under the MIT license.
 
@@ -11,20 +13,17 @@ import torch
 import torch.utils.data
 import numpy as np
 from librosa.util import normalize
-from scipy.io.wavfile import read
 from librosa.filters import mel as librosa_mel_fn
+from librosa import resample
+import soundfile as sf
 import pathlib
 from tqdm import tqdm
 
-MAX_WAV_VALUE = 32768.0
-
 
 def load_wav(full_path, sr_target):
-    sampling_rate, data = read(full_path)
-    if sampling_rate != sr_target:
-        raise RuntimeError("Sampling rate of the file {} is {} Hz, but the model requires {} Hz".
-              format(full_path, sampling_rate, sr_target))
-    return data, sampling_rate
+    sampling_rate, data = sf.read(full_path)
+    data = resample(data, sampling_rate, sr_target)
+    return data
 
 
 def dynamic_range_compression(x, C=1, clip_val=1e-5):
@@ -146,14 +145,10 @@ class MelDataset(torch.utils.data.Dataset):
 
         filename = self.audio_files[index]
         if self._cache_ref_count == 0:
-            audio, sampling_rate = load_wav(filename, self.sampling_rate)
-            audio = audio / MAX_WAV_VALUE
+            audio = load_wav(filename, self.sampling_rate)
             if not self.fine_tuning:
                 audio = normalize(audio) * 0.95
             self.cached_wav = audio
-            if sampling_rate != self.sampling_rate:
-                raise ValueError("{} SR doesn't match target {} SR".format(
-                    sampling_rate, self.sampling_rate))
             self._cache_ref_count = self.n_cache_reuse
         else:
             audio = self.cached_wav
