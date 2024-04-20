@@ -11,7 +11,6 @@ import json
 import torch
 from scipy.io.wavfile import write
 from env import AttrDict
-from meldataset import MAX_WAV_VALUE
 from models import BigVGAN as Generator
 
 h = None
@@ -41,16 +40,17 @@ def inference(a, h):
     state_dict_g = load_checkpoint(a.checkpoint_file, device)
     generator.load_state_dict(state_dict_g['generator'])
 
-    filelist = os.listdir(a.input_mels_dir)
+    filelist = glob.glob(os.path.join(a.input_wavs_dir, '**/*.npy'), recursive=True)
 
     os.makedirs(a.output_dir, exist_ok=True)
 
     generator.eval()
     generator.remove_weight_norm()
     with torch.no_grad():
-        for i, filname in enumerate(filelist):
+        for i, path in enumerate(filelist):
             # load the mel spectrogram in .npy format
-            x = np.load(os.path.join(a.input_mels_dir, filname))
+            filename = os.path.basename(path)
+            x = np.load(path)
             x = torch.FloatTensor(x).to(device)
             if len(x.shape) == 2:
                 x = x.unsqueeze(0)
@@ -58,10 +58,10 @@ def inference(a, h):
             y_g_hat = generator(x)
 
             audio = y_g_hat.squeeze()
-            audio = audio * MAX_WAV_VALUE
+            audio = audio * 32767
             audio = audio.cpu().numpy().astype('int16')
 
-            output_file = os.path.join(a.output_dir, os.path.splitext(filname)[0] + '_generated_e2e.wav')
+            output_file = os.path.join(a.output_dir, os.path.splitext(filename)[0] + '_generated_e2e.wav')
             write(output_file, h.sampling_rate, audio)
             print(output_file)
 
