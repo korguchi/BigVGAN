@@ -45,6 +45,7 @@ def inference(a, h):
     state_dict_g = load_checkpoint(a.checkpoint_file, device)
     generator.load_state_dict(state_dict_g['generator'])
 
+    filelist = glob.glob(os.path.join(a.intpu_wavs_dir, '**/.wav'), recursive=True)
     filelist = os.listdir(a.input_wavs_dir)
 
     os.makedirs(a.output_dir, exist_ok=True)
@@ -52,9 +53,10 @@ def inference(a, h):
     generator.eval()
     generator.remove_weight_norm()
     with torch.no_grad():
-        for i, filname in enumerate(filelist):
+        for i, path in enumerate(filelist):
             # load the ground truth audio and resample if necessary
-            wav, sr = librosa.load(os.path.join(a.input_wavs_dir, filname), sr=h.sampling_rate, mono=True)
+            filename = os.path.basename(path)
+            wav, sr = librosa.load(path, sr=h.sampling_rate, mono=True)
             wav = torch.FloatTensor(wav).to(device)
             # compute mel spectrogram from the ground truth audio
             x = get_mel(wav.unsqueeze(0))
@@ -65,7 +67,7 @@ def inference(a, h):
             audio = audio * 32767
             audio = audio.cpu().numpy().astype('int16')
 
-            output_file = os.path.join(a.output_dir, os.path.splitext(filname)[0] + '_generated.wav')
+            output_file = os.path.join(a.output_dir, os.path.splitext(filename)[0] + '_generated.wav')
             write(output_file, h.sampling_rate, audio)
             print(output_file)
 
