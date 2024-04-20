@@ -13,19 +13,19 @@ If you'd like to train from mel spectrogram and wav files, you can run this comm
 python train.py \
 --config configs/bigvgan_24khz_100band.json \
 --fine_tuning 1 \
---input_wavs_dir JSUT/wav \
---input_mels_dir JSUT/mel \
---input_training_file JSUT/train.txt \
---input_validation_file JSUT/test.txt \
---input_test_file JSUT/test.txt \
+--input_wavs_dir wav \
+--input_mels_dir mel \
+--input_training_file train.txt \
+--input_validation_file val.txt \
+--input_test_file test.txt \
 --checkpoint_path exp/bigvgan
 ```
 
 `train.txt`
 ```
-BASIC5000_0001
-BASIC5000_0002
-BASIC5000_0003
+BASENAME_0001
+BASENAME_0002
+BASENAME_0003
 ...
 ```
 
