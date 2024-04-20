@@ -45,8 +45,7 @@ def inference(a, h):
     state_dict_g = load_checkpoint(a.checkpoint_file, device)
     generator.load_state_dict(state_dict_g['generator'])
 
-    filelist = glob.glob(os.path.join(a.intpu_wavs_dir, '**/.wav'), recursive=True)
-    filelist = os.listdir(a.input_wavs_dir)
+    filelist = glob.glob(os.path.join(a.intpu_wavs_dir, '**/*.wav'), recursive=True)
 
     os.makedirs(a.output_dir, exist_ok=True)
 
