@@ -42,8 +42,8 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--config', default='')
-    parser.add_argument('--input_wav_dir', type=str, default='JSUT/wav')
-    parser.add_argument('--output_mel_dir', type=str, default='JSUT/mel')
+    parser.add_argument('--input_wav_dir', type=str, default='wav')
+    parser.add_argument('--output_mel_dir', type=str, default='mel')
     
     a = parser.parse_args()
 
