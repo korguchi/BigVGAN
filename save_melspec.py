@@ -16,12 +16,10 @@ import json
 from meldataset import MelDataset, load_wav, mel_spectrogram
 from glob import glob
 import numpy as np
-from scipy.signal import stft, hann
 
-
-def save_melspec(h, input_wav_dir, output_mel_dir):
-    os.makedirs(output_mel_dir, exist_ok=True)
-    wav_paths = glob(os.path.join(input_wavs_dir, '*.wav'))
+def save_melspec(h, input_wavs_dir, output_mels_dir):
+    os.makedirs(output_mels_dir, exist_ok=True)
+    wav_paths = glob(os.path.join(input_wavs_dir, '**/*.wav'), recursive=True)
     for w in tqdm(wav_paths):
         audio = load_wav(w, h.sampling_rate)
         audio = torch.FloatTensor(audio)
@@ -35,7 +33,10 @@ def save_melspec(h, input_wav_dir, output_mel_dir):
                               h.fmin,
                               h.fmax)
         mel = mel.to('cpu').detach().numpy().copy()
-        np.save(os.path.join(output_mels_dir, os.path.basename(w).replace('.wav', '.npy')), mel, allow_pickle=False)
+        mel_dir = os.path.join(output_mels_dir, os.path.dirname(w).replace('wav/', ''))
+        os.makedirs(mel_dir, exist_ok=True)
+        np.save(os.path.join(mel_dir, os.path.basename(w).replace('.wav', '.npy')), mel, allow_pickle=False)
+        # np.save(os.path.join(output_mels_dir, w.replace('wav/', '').replace('.wav', '.npy')), mel, allow_pickle=False)
 
 
 def main():
@@ -53,7 +54,7 @@ def main():
     json_config = json.loads(data)
     h = AttrDict(json_config)
 
-    save_melspec(h, a.input_wav_dir, a.output_mel_dir)
+    save_melspec(h, a.input_wavs_dir, a.output_mels_dir)
 
 if __name__ == '__main__':
     main()
