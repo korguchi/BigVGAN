@@ -21,7 +21,7 @@ from scipy.signal import stft, hann
 
 def save_melspec(h, input_wav_dir, output_mel_dir):
     os.makedirs(output_mel_dir, exist_ok=True)
-    wav_paths = glob(os.path.join(input_wav_dir, '*.wav'))
+    wav_paths = glob(os.path.join(input_wavs_dir, '*.wav'))
     for w in tqdm(wav_paths):
         audio = load_wav(w, h.sampling_rate)
         audio = torch.FloatTensor(audio)
@@ -35,15 +35,15 @@ def save_melspec(h, input_wav_dir, output_mel_dir):
                               h.fmin,
                               h.fmax)
         mel = mel.to('cpu').detach().numpy().copy()
-        np.save(os.path.join(output_mel_dir, os.path.basename(w).replace('.wav', '.npy')), mel, allow_pickle=False)
+        np.save(os.path.join(output_mels_dir, os.path.basename(w).replace('.wav', '.npy')), mel, allow_pickle=False)
 
 
 def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--config', default='')
-    parser.add_argument('--input_wav_dir', type=str, default='wav')
-    parser.add_argument('--output_mel_dir', type=str, default='mel')
+    parser.add_argument('--input_wavs_dir', type=str, default='wav')
+    parser.add_argument('--output_mels_dir', type=str, default='mel')
     
     a = parser.parse_args()
 
