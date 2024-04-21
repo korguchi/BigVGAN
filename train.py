@@ -148,12 +148,6 @@ def train(rank, a, h):
         torch.cuda.empty_cache()
 
         val_err_tot = 0
-        val_pesq_tot = 0
-        val_mrstft_tot = 0
-
-        # modules for evaluation metrics
-        pesq_resampler = ta.transforms.Resample(h.sampling_rate, 16000).cuda()
-        loss_mrstft = auraloss.freq.MultiResolutionSTFTLoss(device="cuda")
 
         if a.save_audio: # also save audio to disk if --save_audio is set to True
             os.makedirs(os.path.join(a.checkpoint_path, 'samples', 'gt_{}'.format(mode)), exist_ok=True)
@@ -175,18 +169,6 @@ def train(rank, a, h):
                                               h.hop_size, h.win_size,
                                               h.fmin, h.fmax_for_loss)
                 val_err_tot += F.l1_loss(y_mel, y_g_hat_mel).item()
-
-                # PESQ calculation. only evaluate PESQ if it's speech signal (nonspeech PESQ will error out)
-                if not "nonspeech" in mode: # skips if the name of dataset (in mode string) contains "nonspeech"
-                    # resample to 16000 for pesq
-                    y_16k = pesq_resampler(y)
-                    y_g_hat_16k = pesq_resampler(y_g_hat.squeeze(1))
-                    y_int_16k = (y_16k[0]).short().cpu().numpy()
-                    y_g_hat_int_16k = (y_g_hat_16k[0]).short().cpu().numpy()
-                    val_pesq_tot += pesq(16000, y_int_16k, y_g_hat_int_16k, 'wb')
-
-                # MRSTFT calculation
-                val_mrstft_tot += loss_mrstft(y_g_hat.squeeze(1), y).item()
 
                 # log audio and figures to Tensorboard
                 if j % a.eval_subsample == 0:  # subsample every nth from validation set
@@ -212,26 +194,11 @@ def train(rank, a, h):
                                   plot_spectrogram_clipped(spec_delta.numpy(), clip_max=1.), steps)
 
             val_err = val_err_tot / (j + 1)
-            val_pesq = val_pesq_tot / (j + 1)
-            val_mrstft = val_mrstft_tot / (j + 1)
+
             # log evaluation metrics to Tensorboard
             sw.add_scalar("validation_{}/mel_spec_error".format(mode), val_err, steps)
-            sw.add_scalar("validation_{}/pesq".format(mode), val_pesq, steps)
-            sw.add_scalar("validation_{}/mrstft".format(mode), val_mrstft, steps)
 
         generator.train()
-
-    # if the checkpoint is loaded, start with validation loop
-    if steps != 0 and rank == 0 and not a.debug:
-        if not a.skip_seen:
-            validate(rank, a, h, validation_loader,
-                     mode="validation_{}".format(train_loader.dataset.name))
-        
-        validate(rank, a, h, test_loader[i],
-                 mode="test_{}".format(test_loader.dataset.name))
-    # exit the script if --evaluate is set to True
-    if a.evaluate:
-        exit()
 
     # main training loop
     generator.train()
@@ -377,12 +344,13 @@ def main():
 
     parser.add_argument('--group_name', default=None)
 
-    parser.add_argument('--input_wavs_dir', default='JSUT/wav')
-    parser.add_argument('--input_mels_dir', default='JSUT/mel')
-    parser.add_argument('--input_training_file', default='JSUT/train.txt')
-    parser.add_argument('--input_validation_file', default='JSUT/val.txt')
-    parser.add_argument('--input_test_file', default='JSUT/test.txt')
+    parser.add_argument('--input_wavs_dir', default='wav')
+    parser.add_argument('--input_mels_dir', default='mel')
+    parser.add_argument('--input_training_file', default='train.txt')
+    parser.add_argument('--input_validation_file', default='val.txt')
+    parser.add_argument('--input_test_file', default='test.txt')
 
+    parser.add_argument('--pretrained_path', default='pretrained')
     parser.add_argument('--checkpoint_path', default='exp/bigvgan')
     parser.add_argument('--config', default='')
 
@@ -407,6 +375,7 @@ def main():
                         help="skip seen dataset. useful for test set inference")
     parser.add_argument('--save_audio', default=False, type=bool,
                         help="save audio of test set inference to disk")
+    
 
     a = parser.parse_args()
 
