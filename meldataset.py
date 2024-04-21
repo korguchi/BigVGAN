@@ -57,10 +57,10 @@ hann_window = {}
 
 
 def mel_spectrogram(y, n_fft, num_mels, sampling_rate, hop_size, win_size, fmin, fmax, center=False):
-    if torch.min(y) < -1.:
-        print('min value is ', torch.min(y))
-    if torch.max(y) > 1.:
-        print('max value is ', torch.max(y))
+    # if torch.min(y) < -1.:
+    #     print('min value is ', torch.min(y))
+    # if torch.max(y) > 1.:
+    #     print('max value is ', torch.max(y))
 
     global mel_basis, hann_window
     if fmax not in mel_basis:
@@ -85,15 +85,15 @@ def mel_spectrogram(y, n_fft, num_mels, sampling_rate, hop_size, win_size, fmin,
 
 def get_dataset_filelist(a):
     with open(a.input_training_file, 'r', encoding='utf-8') as fi:
-        training_files = [x+'.wav' for x in fi.read().split('\n') if len(x) > 0]
+        training_files = ['wav'+x+'.wav' for x in fi.read().split('\n') if len(x) > 0]
         print("first training file: {}".format(training_files[0]))
 
     with open(a.input_validation_file, 'r', encoding='utf-8') as fi:
-        validation_files = [x+'.wav' for x in fi.read().split('\n') if len(x) > 0]
+        validation_files = ['wav'+x+'.wav' for x in fi.read().split('\n') if len(x) > 0]
         print("first validation file: {}".format(validation_files[0]))
 
     with open(a.input_test_file, 'r', encoding='utf-8') as fi:
-        test_files = [x+'.wav' for x in fi.read().split('\n') if len(x) > 0]
+        test_files = ['wav'+x+'.wav' for x in fi.read().split('\n') if len(x) > 0]
         print("first test file: {}".format(test_files[0]))
 
     return training_files, validation_files, test_files
@@ -175,7 +175,7 @@ class MelDataset(torch.utils.data.Dataset):
 
         else:
             mel = np.load(
-                os.path.join(self.base_mels_path, os.path.splitext(os.path.split(filename)[-1])[0] + '.npy'))
+                self.base_mels_path + filename.strip('.wav') + '.npy')
             mel = torch.from_numpy(mel)
 
             if len(mel.shape) < 3:
